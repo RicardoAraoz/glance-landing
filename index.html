@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: "cards opening" slider for a general audience. A full-bleed personal start page is the scene;
+   giant condensed title left, portrait cards right that expand into the next scene. Single dark look by design. */
+:root {
+  --ink: #0b0d12;
+  --ink-2: #12151c;
+  --line: rgba(255,255,255,.14);
+  --fg: #f4f2ec;
+  --muted: rgba(244,242,236,.68);
+  --accent: #f3b23c;
+  --accent-ink: #1a1204;
+  --f-display: "Bebas Neue", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --maxw: 1280px;
+  color-scheme: dark;
+}
+.th { --g-bg:#12151e; --g-card:#191d29; --g-line:#262b3b; --g-fg:#dcdbd6; --g-muted:#7f8599; --g-primary:#f3b23c; --g-pos:#6fd3a4; --g-neg:#f08080; --g-sky1:#3a2512; --g-sky2:#0d1018; }
+.th[data-gtheme="lagoon"] { --g-bg:#0e1a1d; --g-card:#13242a; --g-line:#1f363d; --g-fg:#d6ecea; --g-muted:#76979a; --g-primary:#5fd4c4; --g-sky1:#0f3a3c; --g-sky2:#071214; }
+.th[data-gtheme="plum"]   { --g-bg:#1a1220; --g-card:#22182b; --g-line:#35263f; --g-fg:#eadcf0; --g-muted:#9a86a6; --g-primary:#e59adf; --g-sky1:#3b1d3f; --g-sky2:#110a15; }
+.th[data-gtheme="moss"]   { --g-bg:#13170f; --g-card:#1a2015; --g-line:#2a3322; --g-fg:#e1e6d4; --g-muted:#8c9878; --g-primary:#b9d46a; --g-sky1:#29351a; --g-sky2:#0b0e08; }
+.th[data-gtheme="paper"]  { --g-bg:#eef0f4; --g-card:#ffffff; --g-line:#dde1ea; --g-fg:#1d2230; --g-muted:#6a7187; --g-primary:#d0632b; --g-pos:#1f8a5b; --g-neg:#c0393b; --g-sky1:#d9c7b6; --g-sky2:#5b6273; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--fg); font-family: var(--f-body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--ink); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+h1, h2, h3 { margin: 0; font-family: var(--f-display); font-weight: 400; letter-spacing: .01em; text-wrap: balance; line-height: .9; }
+p { margin: 0; }
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.dash { display: block; width: 26px; height: 3px; background: var(--fg); border-radius: 2px; }
+.kicker { font-size: 15px; opacity: .9; }
+
+/* ---------- Nav ---------- */
+.nav { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 30; }
+.nav .wrap { display: flex; align-items: center; gap: 28px; padding-block: 22px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 12px/1 var(--f-body); letter-spacing: .32em; text-transform: uppercase; }
+.brand svg { width: 22px; height: 22px; }
+.links { display: flex; gap: 30px; margin-left: auto; font: 600 10.5px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; }
+.links a { text-decoration: none; opacity: .8; padding-block: 8px; position: relative; }
+.links a:hover, .links a.on { opacity: 1; }
+.links a.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); border-radius: 2px; }
+.nav-tools { display: flex; align-items: center; gap: 14px; }
+.lang { display: inline-flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.lang button { font: 600 10.5px/1 var(--f-body); letter-spacing: .14em; color: var(--muted); background: none; border: 0; padding: 7px 10px; border-radius: 999px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--fg); color: var(--ink); }
+@media (max-width: 860px) { .links { display: none; } .nav-tools { margin-left: auto; } }
+
+/* ---------- Hero / slider ---------- */
+.hero { position: relative; min-height: clamp(640px, 92vh, 900px); overflow: hidden; isolation: isolate; display: flex; }
+.scene { position: absolute; inset: 0; z-index: -2; background: radial-gradient(1200px 700px at 75% 35%, var(--g-sky1), var(--g-sky2) 70%); transition: background .8s ease; }
+.scene::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(8,9,13,.92) 0%, rgba(8,9,13,.72) 34%, rgba(8,9,13,.15) 70%, rgba(8,9,13,.35) 100%),
+              linear-gradient(0deg, rgba(8,9,13,.85) 0%, transparent 38%);
+}
+.scene-dash { position: absolute; top: 13%; right: -4%; width: min(1020px, 74%); perspective: 1800px; }
+.gl {
+  background: var(--g-bg); color: var(--g-fg); border: 1px solid var(--g-line); border-radius: 18px; overflow: hidden;
+  font: 13px/1.45 var(--f-body); transform: rotateY(-14deg) rotateX(5deg); transform-origin: right center;
+  box-shadow: 0 60px 140px -40px rgba(0,0,0,.8); transition: background .8s, color .8s, border-color .8s;
+}
+.gl * { transition: background-color .8s, color .8s, border-color .8s, opacity .6s, transform .6s, box-shadow .6s; }
+.gl-bar { display: flex; align-items: center; gap: 18px; padding: 12px 18px; border-bottom: 1px solid var(--g-line); }
+.gl-dots { display: flex; gap: 6px; } .gl-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--g-line); }
+.gl-tabs { display: flex; gap: 18px; font-weight: 500; color: var(--g-muted); white-space: nowrap; overflow: hidden; }
+.gl-tabs span.on { color: var(--g-primary); }
+.gl-cols { display: grid; grid-template-columns: 1fr 2.1fr 1fr; gap: 14px; padding: 16px; align-items: start; }
+.gl-col { display: grid; gap: 14px; min-width: 0; }
+.ww { border-radius: 12px; }
+.gl[data-focus] .ww { opacity: .38; }
+.gl[data-focus="feeds"] .ww[data-w="feeds"], .gl[data-focus="weather"] .ww[data-w="weather"], .gl[data-focus="weather"] .ww[data-w="clock"],
+.gl[data-focus="markets"] .ww[data-w="markets"], .gl[data-focus="videos"] .ww[data-w="videos"] {
+  opacity: 1; transform: scale(1.035); box-shadow: 0 0 0 1px var(--g-primary), 0 20px 60px -20px var(--g-primary);
+}
+.w-title { font: 600 11px/1 var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--g-muted); margin: 0 0 8px 2px; }
+.w { background: var(--g-card); border: 1px solid var(--g-line); border-radius: 10px; padding: 14px; min-width: 0; }
+.clock { font: 34px/1 var(--f-display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.clock-sub { color: var(--g-muted); margin-top: 6px; font-size: 12px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 12px; text-align: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+.cal span { padding: 4px 0; border-radius: 5px; color: var(--g-muted); }
+.cal span.t { background: var(--g-primary); color: var(--g-bg); font-weight: 700; }
+.wx { display: flex; align-items: center; gap: 12px; }
+.wx-temp { font: 34px/1 var(--f-display); }
+.wx-sun { width: 34px; height: 34px; border-radius: 50%; background: var(--g-primary); box-shadow: 0 0 24px var(--g-primary); flex: none; }
+.wx-bars { display: flex; align-items: end; gap: 4px; height: 40px; margin-top: 12px; }
+.wx-bars i { flex: 1; background: var(--g-line); border-radius: 3px 3px 0 0; }
+.wx-bars i.now { background: var(--g-primary); }
+.feed { list-style: none; margin: 0; padding: 0; }
+.feed li { padding: 9px 2px; border-top: 1px solid var(--g-line); display: grid; gap: 2px; animation: slidein .6s cubic-bezier(.2,.7,.2,1); }
+.feed li:first-child { border-top: 0; }
+.feed span { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed small { color: var(--g-muted); font-size: 11px; } .feed small b { color: var(--g-primary); font-weight: 500; }
+@keyframes slidein { from { transform: translateY(-8px); } to { transform: none; } }
+.vids { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vid { display: grid; gap: 6px; min-width: 0; }
+.thumb { aspect-ratio: 16/9; border-radius: 7px; max-width: 100%; }
+.vid span { font-size: 11.5px; font-weight: 500; line-height: 1.3; }
+.vid small { color: var(--g-muted); font-size: 10.5px; }
+.mkt { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--g-line); }
+.mkt:first-child { border-top: 0; padding-top: 0; }
+.mkt b { font-weight: 600; } .mkt small { color: var(--g-muted); font-size: 11px; }
+.mkt .px { text-align: right; font-variant-numeric: tabular-nums; } .mkt .chg { text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; }
+.up { color: var(--g-pos); } .down { color: var(--g-neg); }
+.mkt svg { grid-column: 1 / -1; width: 100%; height: 26px; overflow: visible; }
+.mkt polyline { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.bm { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bm span { display: grid; place-items: center; gap: 4px; font-size: 10.5px; color: var(--g-muted); text-align: center; }
+.bm i { width: 30px; height: 30px; border-radius: 9px; background: var(--g-line); display: block; }
+.bm span:nth-child(odd) i { background: color-mix(in srgb, var(--g-primary) 40%, var(--g-line)); }
+
+.hero-inner { position: relative; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: 1fr auto; gap: 0 40px; padding-block: 120px 40px; }
+.copy { align-self: center; display: grid; gap: 18px; max-width: 540px; }
+.title { font-size: clamp(4.2rem, 10vw, 9rem); text-transform: uppercase; overflow: hidden; padding-top: .04em; }
+.title span { display: block; }
+.title.swap span { animation: lineup .8s cubic-bezier(.2,.8,.2,1) both; }
+.title.swap span:nth-child(2) { animation-delay: .08s; }
+@keyframes lineup { from { transform: translateY(105%); } to { transform: none; } }
+.fadeup { animation: fadeup .7s cubic-bezier(.2,.8,.2,1) both .15s; }
+@keyframes fadeup { from { transform: translateY(14px); opacity: .2; } to { transform: none; opacity: 1; } }
+.desc { color: var(--muted); max-width: 44ch; font-size: 15px; }
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.round { width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer; background: var(--accent); color: var(--accent-ink); text-decoration: none; transition: transform .2s, box-shadow .2s; }
+.round:hover { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(243,178,60,.18); }
+.round svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pill { display: inline-flex; align-items: center; height: 40px; padding: 0 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,.55); font: 600 11px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; transition: background .2s, color .2s; }
+.pill:hover { background: var(--fg); color: var(--ink); }
+.pill.solid { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pill.solid:hover { background: var(--fg); border-color: var(--fg); }
+
+.cards { align-self: end; display: flex; gap: 16px; overflow: hidden; padding-block: 8px 4px; mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.card {
+  flex: none; width: 168px; aspect-ratio: 168 / 238; border-radius: 14px; overflow: hidden; position: relative; cursor: pointer;
+  border: 0; padding: 0; text-align: left; color: #fff; font: inherit;
+  background: radial-gradient(140% 90% at 70% 10%, var(--g-sky1), var(--g-sky2));
+  box-shadow: 0 24px 50px -24px rgba(0,0,0,.8); transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  animation: cardin .7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 70ms);
+}
+.card[data-gtheme="paper"] { color: #1d2230; }
+.card:hover { transform: translateY(-8px); }
+@keyframes cardin { from { transform: translateX(60px); } to { transform: none; } }
+.card .mini { position: absolute; inset: 14px 14px auto; height: 52%; border-radius: 8px; background: var(--g-bg); border: 1px solid var(--g-line); padding: 10px; display: grid; gap: 6px; align-content: start; }
+.card .mini i { display: block; height: 6px; border-radius: 4px; background: var(--g-line); }
+.card .mini i.p { background: var(--g-primary); }
+.card .mini svg { width: 100%; height: 100%; }
+.card .meta { position: absolute; left: 14px; right: 14px; bottom: 14px; display: grid; gap: 4px; z-index: 1; }
+.card .meta .dash { width: 14px; height: 2px; background: currentColor; }
+.card .meta small { font-size: 11px; opacity: .85; }
+.card .meta b { font: 400 25px/.95 var(--f-display); letter-spacing: .02em; text-transform: uppercase; }
+.card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.55)); pointer-events: none; }
+.card[data-gtheme="paper"]::after { background: linear-gradient(180deg, transparent 45%, rgba(255,255,255,.5)); }
+
+.controls { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; margin-top: 28px; }
+.controls-l { display: flex; gap: 12px; }
+.circle { width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,.45); background: transparent; color: var(--fg); display: grid; place-items: center; cursor: pointer; transition: background .2s, color .2s; }
+.circle:hover { background: var(--fg); color: var(--ink); }
+.circle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.track { height: 1px; background: rgba(255,255,255,.3); position: relative; }
+.track i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--accent); border-radius: 2px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.counter { font: 64px/.8 var(--f-display); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+.counter small { font-size: 18px; opacity: .5; margin-left: 4px; }
+.opener { position: fixed; z-index: 25; border-radius: 14px; pointer-events: none; background: radial-gradient(1200px 700px at 75% 35%, var(--g-sky1), var(--g-sky2) 70%); }
+
+@media (max-width: 960px) {
+  .hero-inner { grid-template-columns: 1fr; grid-template-rows: auto auto auto; padding-block: 104px 28px; gap: 28px; }
+  .scene-dash { top: auto; bottom: 22%; right: -30%; width: 120%; opacity: .45; }
+  .copy { max-width: none; }
+  .cards { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; mask-image: none; -webkit-mask-image: none; }
+  .cards::-webkit-scrollbar { display: none; }
+  .card { width: 148px; scroll-snap-align: start; }
+  .controls { margin-top: 0; }
+  .counter { font-size: 48px; }
+}
+
+/* ---------- Below the fold ---------- */
+section { padding-block: 104px; }
+.head { display: grid; gap: 14px; margin-bottom: 44px; }
+.head h2 { font-size: clamp(3rem, 7vw, 5.6rem); text-transform: uppercase; }
+.head p { color: var(--muted); max-width: 56ch; font-size: 17px; }
+.strip { background: var(--ink-2); border-block: 1px solid var(--line); padding-block: 0; }
+.figs { display: grid; grid-template-columns: repeat(4, 1fr); }
+.fig { padding: 34px 24px; border-left: 1px solid var(--line); display: grid; gap: 6px; }
+.fig:first-child { border-left: 0; padding-left: 0; }
+.fig b { font: 400 clamp(3rem, 6vw, 4.6rem)/.85 var(--f-display); }
+.fig b em { font-style: normal; color: var(--accent); }
+.fig span { color: var(--muted); font-size: 14px; }
+@media (max-width: 760px) { .figs { grid-template-columns: 1fr 1fr; } .fig { padding: 24px 16px; } .fig:nth-child(3) { border-left: 0; padding-left: 0; } .fig:nth-child(n+3) { border-top: 1px solid var(--line); } }
+
+.wrow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; scrollbar-width: thin; }
+.wcard { scroll-snap-align: start; border-radius: 14px; border: 1px solid var(--line); padding: 22px; display: grid; gap: 10px; align-content: end; min-height: 290px; position: relative; overflow: hidden; transition: transform .3s, border-color .3s; background: radial-gradient(120% 80% at 80% 0%, var(--tint, #2a2015), #10131a 70%); }
+.wcard:hover { transform: translateY(-6px); border-color: rgba(243,178,60,.5); }
+.wcard .tag { position: absolute; top: 20px; left: 22px; font: 600 10.5px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.wcard .art { position: absolute; top: 52px; right: 22px; width: 64px; height: 64px; opacity: .9; }
+.wcard .art svg { width: 100%; height: 100%; fill: none; stroke: var(--fg); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.wcard .dash { width: 14px; height: 2px; }
+.wcard h3 { font-size: 36px; text-transform: uppercase; }
+.wcard p { color: var(--muted); font-size: 14.5px; }
+
+.why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--line); }
+.why div { padding: 28px 24px 0 0; display: grid; gap: 10px; align-content: start; }
+.why h3 { font-size: 34px; text-transform: uppercase; }
+.why h3 em { font-style: normal; color: var(--accent); }
+.why p { color: var(--muted); font-size: 15px; max-width: 30ch; }
+@media (max-width: 860px) { .why { grid-template-columns: 1fr 1fr; row-gap: 12px; } }
+@media (max-width: 520px) { .why { grid-template-columns: 1fr; } }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.step { border-radius: 14px; overflow: hidden; background: var(--ink); border: 1px solid var(--line); display: grid; }
+.step .shot { aspect-ratio: 16 / 10; background: radial-gradient(120% 90% at 70% 0%, var(--tint), #0d1018 75%); position: relative; display: grid; place-items: center; }
+.step .shot b { font: 140px/.8 var(--f-display); color: rgba(255,255,255,.1); position: absolute; left: 18px; bottom: -6px; }
+.step .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 80%; position: relative; }
+.step .chips span { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); }
+.step .chips span.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.step .body { padding: 22px; display: grid; gap: 8px; }
+.step h3 { font-size: 30px; text-transform: uppercase; }
+.step p { color: var(--muted); font-size: 15px; }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+
+.start { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: start; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.faq { display: grid; border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; padding: 20px 40px 20px 0; position: relative; font-weight: 600; font-size: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 4px; top: 14px; font: 28px/1 var(--f-display); color: var(--accent); transition: transform .3s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { color: var(--muted); padding: 0 0 20px; max-width: 60ch; font-size: 15px; }
+@media (max-width: 900px) { .start { grid-template-columns: 1fr; gap: 36px; } }
+
+footer { border-top: 1px solid var(--line); padding-block: 30px; color: var(--muted); font-size: 12.5px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+footer p { max-width: 72ch; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Glance">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="18" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="13" y="14" width="8" height="7" rx="2"/></svg>
+      Glance
+    </a>
+    <nav class="links" aria-label="Secciones">
+      <a href="#top" class="on" data-es="Inicio" data-en="Home">Inicio</a>
+      <a href="#que-ves" data-es="Qué puedes ver" data-en="What you'll see">Qué puedes ver</a>
+      <a href="#como" data-es="Cómo funciona" data-en="How it works">Cómo funciona</a>
+      <a href="#empieza" data-es="Empieza" data-en="Get started">Empieza</a>
+    </nav>
+    <div class="nav-tools">
+      <div class="lang" role="group" aria-label="Idioma / Language">
+        <button type="button" id="lang-es" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" id="lang-en" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero th" id="hero">
+    <div class="scene" aria-hidden="true">
+      <div class="scene-dash">
+        <div class="gl" id="mock" data-focus="feeds">
+          <div class="gl-bar">
+            <div class="gl-dots"><i></i><i></i><i></i></div>
+            <div class="gl-tabs"><span class="on" data-es="Mi mañana" data-en="My morning">Mi mañana</span><span data-es="Noticias" data-en="News">Noticias</span><span data-es="Finanzas" data-en="Money">Finanzas</span><span data-es="Videos" data-en="Videos">Videos</span></div>
+          </div>
+          <div class="gl-cols">
+            <div class="gl-col">
+              <div class="ww" data-w="clock"><p class="w-title" data-es="Hoy" data-en="Today">Hoy</p><div class="w"><div class="clock" id="clock">09:41</div><div class="clock-sub" id="clock-date">—</div><div class="cal" id="cal"></div></div></div>
+              <div class="ww" data-w="weather"><p class="w-title" data-es="Clima" data-en="Weather">Clima</p><div class="w">
+                <div class="wx"><div class="wx-sun"></div><div><div class="wx-temp">24°</div><small style="color:var(--g-muted)" data-es="Soleado · máx 27°" data-en="Sunny · high 27°">Soleado · máx 27°</small></div></div>
+                <div class="wx-bars"><i style="height:40%"></i><i style="height:52%"></i><i style="height:68%"></i><i class="now" style="height:82%"></i><i style="height:90%"></i><i style="height:76%"></i><i style="height:58%"></i><i style="height:44%"></i></div>
+              </div></div>
+            </div>
+            <div class="gl-col">
+              <div class="ww" data-w="feeds"><p class="w-title" data-es="Tus noticias" data-en="Your news">Tus noticias</p><div class="w"><ul class="feed" id="news"></ul></div></div>
+              <div class="ww" data-w="videos"><p class="w-title" data-es="Videos nuevos de tus canales" data-en="New from your channels">Videos nuevos de tus canales</p><div class="w"><div class="vids">
+                <div class="vid"><div class="thumb" style="background:linear-gradient(135deg,#5a2a1e,#e0884f)"></div><span data-es="Tacos al pastor en casa, paso a paso" data-en="Homemade al pastor tacos, step by step">Tacos al pastor en casa, paso a paso</span><small>Cocina Fácil · 2 h</small></div>
+                <div class="vid"><div class="thumb" style="background:linear-gradient(135deg,#1d4a52,#8fd0b8)"></div><span data-es="Una semana en Oaxaca con poco presupuesto" data-en="A week in Oaxaca on a budget">Una semana en Oaxaca con poco presupuesto</span><small>Mochila Ligera · 5 h</small></div>
+                <div class="vid"><div class="thumb" style="background:linear-gradient(135deg,#1e2f5a,#7aa0e8)"></div><span data-es="Rutina de 15 minutos para empezar el día" data-en="A 15-minute routine to start your day">Rutina de 15 minutos para empezar el día</span><small>Muévete · 1 d</small></div>
+              </div></div></div>
+            </div>
+            <div class="gl-col">
+              <div class="ww" data-w="markets"><p class="w-title" data-es="Finanzas" data-en="Money">Finanzas</p><div class="w" id="markets"></div></div>
+              <div class="ww" data-w="bookmarks"><p class="w-title" data-es="Accesos" data-en="Shortcuts">Accesos</p><div class="w"><div class="bm">
+                <span><i></i><span data-es="Correo" data-en="Mail">Correo</span></span><span><i></i><span data-es="Banco" data-en="Bank">Banco</span></span><span><i></i><span data-es="Música" data-en="Music">Música</span></span>
+              </div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap hero-inner">
+      <div class="copy">
+        <span class="dash" aria-hidden="true"></span>
+        <p class="kicker" id="s-sub">Noticias · Clima · Videos</p>
+        <h1 class="title" id="s-title"><span>Tu mañana</span><span>en una página</span></h1>
+        <p class="desc" id="s-desc">Las noticias de tus sitios favoritos, el clima, tus videos y el precio del dólar, juntos en una sola pantalla. Ábrela con el café y ponte al día en un minuto.</p>
+        <div class="actions">
+          <a class="round" href="#que-ves" aria-label="Ver qué incluye">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+          </a>
+          <a class="pill" href="#empieza" data-es="Empieza gratis" data-en="Start for free">Empieza gratis</a>
+        </div>
+      </div>
+      <div class="cards" id="cards" aria-label="Más de Glance"></div>
+      <div class="controls">
+        <div class="controls-l">
+          <button class="circle" type="button" id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="circle" type="button" id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="track"><i id="track" style="width:20%"></i></div>
+        <div class="counter" id="counter" aria-live="polite">01</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="strip">
+    <div class="wrap figs">
+      <div class="fig"><b><em>$</em>0</b><span data-es="Gratis, sin suscripción" data-en="Free, no subscription">Gratis, sin suscripción</span></div>
+      <div class="fig"><b>0</b><span data-es="Anuncios. Ni uno." data-en="Ads. Not one.">Anuncios. Ni uno.</span></div>
+      <div class="fig"><b>1</b><span data-es="Página para todo lo que revisas" data-en="Page for everything you check">Página para todo lo que revisas</span></div>
+      <div class="fig"><b>38<em>K</em></b><span data-es="Personas ya lo siguen" data-en="People already follow it">Personas ya lo siguen</span></div>
+    </div>
+  </section>
+
+  <section id="que-ves">
+    <div class="wrap">
+      <div class="head">
+        <span class="dash" aria-hidden="true"></span>
+        <h2 data-es="Todo lo que revisas cada día" data-en="Everything you check every day">Todo lo que revisas cada día</h2>
+        <p data-es="Deja de saltar entre apps y pestañas. Elige qué quieres ver y Glance lo acomoda en tu página, siempre actualizado." data-en="Stop jumping between apps and tabs. Pick what you want to see and Glance puts it on your page, always up to date.">Deja de saltar entre apps y pestañas. Elige qué quieres ver y Glance lo acomoda en tu página, siempre actualizado.</p>
+      </div>
+      <div class="wrow">
+        <article class="wcard" style="--tint:#3a2512"><span class="tag" data-es="Noticias" data-en="News">Noticias</span><span class="art"><svg viewBox="0 0 64 64"><rect x="8" y="10" width="48" height="44" rx="4"/><path d="M16 22h32M16 32h20M16 40h26M16 48h14"/></svg></span><span class="dash"></span><h3 data-es="Tus sitios favoritos" data-en="Your favorite sites">Tus sitios favoritos</h3><p data-es="Los titulares de los medios y blogs que tú eliges, no los que decide un algoritmo." data-en="Headlines from the outlets and blogs you choose, not the ones an algorithm picks.">Los titulares de los medios y blogs que tú eliges, no los que decide un algoritmo.</p></article>
+        <article class="wcard" style="--tint:#0f3a3c"><span class="tag" data-es="Clima" data-en="Weather">Clima</span><span class="art"><svg viewBox="0 0 64 64"><circle cx="24" cy="24" r="10"/><path d="M24 6v4M24 38v4M6 24h4M38 24h4M11 11l3 3M34 34l3 3M37 11l-3 3"/><path d="M28 50h22a8 8 0 0 0-2-15.7A11 11 0 0 0 28 40a5 5 0 0 0 0 10Z"/></svg></span><span class="dash"></span><h3 data-es="Clima por hora" data-en="Hourly weather">Clima por hora</h3><p data-es="Sabrás si llevar paraguas antes de salir de casa." data-en="Know whether to grab an umbrella before you leave.">Sabrás si llevar paraguas antes de salir de casa.</p></article>
+        <article class="wcard" style="--tint:#29351a"><span class="tag" data-es="Videos" data-en="Videos">Videos</span><span class="art"><svg viewBox="0 0 64 64"><rect x="6" y="14" width="52" height="36" rx="8"/><path d="M27 24v16l13-8Z"/></svg></span><span class="dash"></span><h3 data-es="Tus canales" data-en="Your channels">Tus canales</h3><p data-es="Lo nuevo de los canales de YouTube que sigues, en orden y sin recomendaciones." data-en="New uploads from the YouTube channels you follow, in order, no recommendations.">Lo nuevo de los canales de YouTube que sigues, en orden y sin recomendaciones.</p></article>
+        <article class="wcard" style="--tint:#3b1d3f"><span class="tag" data-es="En vivo" data-en="Live">En vivo</span><span class="art"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="6"/><path d="M20 20a17 17 0 0 0 0 24M44 20a17 17 0 0 1 0 24M12 12a28 28 0 0 0 0 40M52 12a28 28 0 0 1 0 40"/></svg></span><span class="dash"></span><h3 data-es="Transmisiones" data-en="Streams">Transmisiones</h3><p data-es="Quién de tus streamers favoritos está en vivo ahora mismo." data-en="Which of your favorite streamers is live right now.">Quién de tus streamers favoritos está en vivo ahora mismo.</p></article>
+        <article class="wcard" style="--tint:#3a2a12"><span class="tag" data-es="Finanzas" data-en="Money">Finanzas</span><span class="art"><svg viewBox="0 0 64 64"><path d="M8 50l14-16 10 8 22-26"/><path d="M42 16h12v12"/></svg></span><span class="dash"></span><h3 data-es="Dólar y más" data-en="Rates and more">Dólar y más</h3><p data-es="El tipo de cambio, tus criptomonedas y las acciones que te interesan." data-en="Exchange rates, your crypto and the stocks you care about.">El tipo de cambio, tus criptomonedas y las acciones que te interesan.</p></article>
+        <article class="wcard" style="--tint:#1e2f5a"><span class="tag" data-es="Calendario" data-en="Calendar">Calendario</span><span class="art"><svg viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="42" rx="5"/><path d="M8 24h48M20 6v12M44 6v12"/><circle cx="40" cy="40" r="4"/></svg></span><span class="dash"></span><h3 data-es="Tu semana" data-en="Your week">Tu semana</h3><p data-es="La fecha y el mes siempre a la vista para planear." data-en="Today's date and the month in view, so planning is easy.">La fecha y el mes siempre a la vista para planear.</p></article>
+        <article class="wcard" style="--tint:#3a2512"><span class="tag" data-es="Comunidades" data-en="Communities">Comunidades</span><span class="art"><svg viewBox="0 0 64 64"><circle cx="22" cy="24" r="8"/><circle cx="44" cy="26" r="6"/><path d="M8 52c2-10 8-14 14-14s12 4 14 14M36 50c1-7 4-10 8-10s8 3 9 10"/></svg></span><span class="dash"></span><h3 data-es="Tus foros" data-en="Your forums">Tus foros</h3><p data-es="Lo más comentado de tus comunidades de Reddit favoritas." data-en="The most talked-about posts from your favorite Reddit communities.">Lo más comentado de tus comunidades de Reddit favoritas.</p></article>
+        <article class="wcard" style="--tint:#0f3a3c"><span class="tag" data-es="Accesos" data-en="Shortcuts">Accesos</span><span class="art"><svg viewBox="0 0 64 64"><rect x="8" y="8" width="20" height="20" rx="5"/><rect x="36" y="8" width="20" height="20" rx="5"/><rect x="8" y="36" width="20" height="20" rx="5"/><rect x="36" y="36" width="20" height="20" rx="5"/></svg></span><span class="dash"></span><h3 data-es="Tus atajos" data-en="Your links">Tus atajos</h3><p data-es="Tu correo, tu banco y tu música a un clic desde la misma página." data-en="Your mail, bank and music one click away from the same page.">Tu correo, tu banco y tu música a un clic desde la misma página.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--ink-2);border-block:1px solid var(--line)">
+    <div class="wrap">
+      <div class="head">
+        <span class="dash" aria-hidden="true"></span>
+        <h2 data-es="Hecho para ti, no para los anunciantes" data-en="Made for you, not for advertisers">Hecho para ti, no para los anunciantes</h2>
+      </div>
+      <div class="why">
+        <div><h3 data-es="Sin anuncios" data-en="No ads">Sin anuncios</h3><p data-es="Nada de banners, videos que se reproducen solos ni contenido patrocinado." data-en="No banners, autoplay videos or sponsored posts.">Nada de banners, videos que se reproducen solos ni contenido patrocinado.</p></div>
+        <div><h3 data-es="Sin algoritmo" data-en="No algorithm">Sin algoritmo</h3><p data-es="Ves lo que elegiste, en orden. Nadie decide por ti qué es importante." data-en="You see what you chose, in order. Nobody decides what matters for you.">Ves lo que elegiste, en orden. Nadie decide por ti qué es importante.</p></div>
+        <div><h3 data-es="Privado" data-en="Private">Privado</h3><p data-es="Tu página vive en tu propio equipo. No hay cuentas ni seguimiento." data-en="Your page lives on your own device. No accounts, no tracking.">Tu página vive en tu propio equipo. No hay cuentas ni seguimiento.</p></div>
+        <div><h3 data-es="Libre" data-en="Open">Libre</h3><p data-es="Es gratis y de código abierto. Lo hace una comunidad, no una empresa que vende tus datos." data-en="It's free and open source. Built by a community, not a company selling your data.">Es gratis y de código abierto. Lo hace una comunidad, no una empresa que vende tus datos.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como">
+    <div class="wrap">
+      <div class="head">
+        <span class="dash" aria-hidden="true"></span>
+        <h2 data-es="Así de fácil" data-en="That simple">Así de fácil</h2>
+        <p data-es="Lo armas una vez y te acompaña todos los días." data-en="Set it up once and it's with you every day.">Lo armas una vez y te acompaña todos los días.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="shot" style="--tint:#3a2512"><b>1</b><div class="chips"><span class="on" data-es="Noticias" data-en="News">Noticias</span><span class="on" data-es="Clima" data-en="Weather">Clima</span><span>Reddit</span><span class="on">YouTube</span><span data-es="Finanzas" data-en="Money">Finanzas</span><span>Twitch</span></div></div>
+          <div class="body"><h3 data-es="Elige qué ver" data-en="Pick what to see">Elige qué ver</h3><p data-es="Noticias, clima, videos, finanzas: escoge solo lo que te importa." data-en="News, weather, videos, money: pick only what matters to you.">Noticias, clima, videos, finanzas: escoge solo lo que te importa.</p></div></div>
+        <div class="step"><div class="shot" style="--tint:#3b1d3f"><b>2</b><div class="chips"><span style="background:#f3b23c;color:#1a1204;border-color:#f3b23c">Ámbar</span><span style="background:#5fd4c4;color:#08201d;border-color:#5fd4c4">Laguna</span><span style="background:#e59adf;color:#2a0f28;border-color:#e59adf">Ciruela</span><span style="background:#eef0f4;color:#1d2230;border-color:#eef0f4" data-es="Claro" data-en="Light">Claro</span></div></div>
+          <div class="body"><h3 data-es="Hazla tuya" data-en="Make it yours">Hazla tuya</h3><p data-es="Acomoda las secciones y elige colores. Puedes tener varias páginas, por ejemplo una para el trabajo." data-en="Arrange sections and pick colors. You can have several pages, like one for work.">Acomoda las secciones y elige colores. Puedes tener varias páginas, por ejemplo una para el trabajo.</p></div></div>
+        <div class="step"><div class="shot" style="--tint:#0f3a3c"><b>3</b><div class="chips"><span class="on" data-es="Celular" data-en="Phone">Celular</span><span class="on">Tablet</span><span class="on">Laptop</span></div></div>
+          <div class="body"><h3 data-es="Ábrela cada mañana" data-en="Open it every morning">Ábrela cada mañana</h3><p data-es="Ponla como página de inicio y revisa todo en un minuto, desde cualquier dispositivo de tu casa." data-en="Set it as your home page and catch up in a minute, from any device at home.">Ponla como página de inicio y revisa todo en un minuto, desde cualquier dispositivo de tu casa.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="empieza" style="background:var(--ink-2);border-top:1px solid var(--line)">
+    <div class="wrap start">
+      <div class="head" style="margin:0">
+        <span class="dash" aria-hidden="true"></span>
+        <h2 data-es="Empieza hoy, gratis" data-en="Start today, free">Empieza hoy, gratis</h2>
+        <p data-es="Glance se instala una sola vez en una computadora de tu casa que esté siempre encendida, o en un servidor. Después lo abres desde tu celular, tablet o laptop. Si nunca has instalado algo así, pídele ayuda a alguien con experiencia: toma unos minutos." data-en="Glance is installed once on a computer at home that stays on, or on a server. After that, you open it from your phone, tablet or laptop. If you've never installed something like this, ask someone with experience to help: it takes a few minutes.">Glance se instala una sola vez en una computadora de tu casa que esté siempre encendida, o en un servidor. Después lo abres desde tu celular, tablet o laptop. Si nunca has instalado algo así, pídele ayuda a alguien con experiencia: toma unos minutos.</p>
+        <div class="cta">
+          <a class="pill solid" href="https://github.com/glanceapp/glance#installation" target="_blank" rel="noopener" data-es="Ver cómo instalarlo" data-en="See how to install">Ver cómo instalarlo</a>
+          <a class="pill" href="https://github.com/glanceapp/glance" target="_blank" rel="noopener" data-es="Conocer el proyecto" data-en="Visit the project">Conocer el proyecto</a>
+        </div>
+      </div>
+      <div class="faq">
+        <details><summary data-es="¿Cuánto cuesta?" data-en="How much does it cost?">¿Cuánto cuesta?</summary><p data-es="Nada. Glance es gratuito y de código abierto. No hay versión de pago ni suscripción." data-en="Nothing. Glance is free and open source. There's no paid tier or subscription.">Nada. Glance es gratuito y de código abierto. No hay versión de pago ni suscripción.</p></details>
+        <details><summary data-es="¿Necesito saber programar?" data-en="Do I need to know how to code?">¿Necesito saber programar?</summary><p data-es="Para usarlo, no. Para instalarlo la primera vez ayuda tener algo de experiencia con computadoras, o alguien que te eche la mano." data-en="Not to use it. Installing it the first time is easier with some computer experience, or a friend who can help.">Para usarlo, no. Para instalarlo la primera vez ayuda tener algo de experiencia con computadoras, o alguien que te eche la mano.</p></details>
+        <details><summary data-es="¿Funciona en mi celular?" data-en="Does it work on my phone?">¿Funciona en mi celular?</summary><p data-es="Sí. La página se adapta a la pantalla del celular y de la tablet, y puedes abrirla desde cualquier dispositivo conectado a tu red." data-en="Yes. The page adapts to phones and tablets, and you can open it from any device on your network.">Sí. La página se adapta a la pantalla del celular y de la tablet, y puedes abrirla desde cualquier dispositivo conectado a tu red.</p></details>
+        <details><summary data-es="¿Qué pasa con mis datos?" data-en="What happens to my data?">¿Qué pasa con mis datos?</summary><p data-es="Se quedan contigo. Glance corre en tu propio equipo, no te pide crear una cuenta y no tiene anuncios ni rastreadores." data-en="They stay with you. Glance runs on your own device, doesn't ask you to create an account and has no ads or trackers.">Se quedan contigo. Glance corre en tu propio equipo, no te pide crear una cuenta y no tiene anuncios ni rastreadores.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p data-es="Concepto no oficial de landing page para Glance, hecho como ejercicio de diseño. No está afiliado ni respaldado por el proyecto. Glance es software libre bajo licencia AGPL-3.0 y su nombre pertenece a sus autores. Los datos que se ven en la página son de ejemplo." data-en="Unofficial landing page concept for Glance, made as a design exercise. Not affiliated with or endorsed by the project. Glance is free software under the AGPL-3.0 license and its name belongs to its authors. Data shown on this page is sample data.">Concepto no oficial de landing page para Glance, hecho como ejercicio de diseño. No está afiliado ni respaldado por el proyecto. Glance es software libre bajo licencia AGPL-3.0 y su nombre pertenece a sus autores. Los datos que se ven en la página son de ejemplo.</p>
+    <a href="https://github.com/glanceapp/glance" target="_blank" rel="noopener">github.com/glanceapp/glance</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var lang = 'es';
+  try { lang = localStorage.getItem('glance-lang') || ((navigator.language || 'es').slice(0, 2) === 'en' ? 'en' : 'es'); } catch (e) {}
+
+  var slides = [
+    { t: '', focus: 'feeds', mini: 'list',
+      es: { sub: 'Noticias · Clima · Videos', title: ['Tu mañana', 'en una página'], card: 'Tu mañana', tag: 'Todo junto', desc: 'Las noticias de tus sitios favoritos, el clima, tus videos y el precio del dólar, juntos en una sola pantalla. Ábrela con el café y ponte al día en un minuto.' },
+      en: { sub: 'News · Weather · Videos', title: ['Your morning', 'on one page'], card: 'Your morning', tag: 'All together', desc: 'News from your favorite sites, the weather, your videos and exchange rates, together on one screen. Open it with your coffee and catch up in a minute.' } },
+    { t: 'lagoon', focus: 'weather', mini: 'weather',
+      es: { sub: 'Clima · Calendario', title: ['Tu día', 'organizado'], card: 'Tu día', tag: 'Clima', desc: 'El pronóstico por hora, la fecha y el calendario siempre a la vista, para planear tu día sin abrir tres apps.' },
+      en: { sub: 'Weather · Calendar', title: ['Your day', 'organized'], card: 'Your day', tag: 'Weather', desc: 'The hourly forecast, today’s date and the calendar always in view, so you can plan your day without opening three apps.' } },
+    { t: 'moss', focus: 'videos', mini: 'grid',
+      es: { sub: 'YouTube · Twitch', title: ['Tus videos', 'sin distracción'], card: 'Videos', tag: 'Tus canales', desc: 'Solo los canales que sigues, del más nuevo al más viejo, y quién está en vivo ahora. Sin recomendaciones que te roben la tarde.' },
+      en: { sub: 'YouTube · Twitch', title: ['Your videos', 'distraction-free'], card: 'Videos', tag: 'Your channels', desc: 'Only the channels you follow, newest first, plus who is live right now. No recommendations eating your afternoon.' } },
+    { t: 'plum', focus: 'markets', mini: 'spark',
+      es: { sub: 'Dólar · Bitcoin · Acciones', title: ['Tu dinero', 'de un vistazo'], card: 'Finanzas', tag: 'Al momento', desc: 'El tipo de cambio, tus criptomonedas y las acciones que te interesan, con su gráfica del día.' },
+      en: { sub: 'Exchange rates · Bitcoin · Stocks', title: ['Your money', 'at a glance'], card: 'Money', tag: 'Up to date', desc: 'Exchange rates, your crypto and the stocks you care about, with today’s chart.' } },
+    { t: 'paper', focus: '', mini: 'swatch',
+      es: { sub: 'Colores · Temas', title: ['A tu', 'estilo'], card: 'Tu estilo', tag: 'Temas', desc: 'Elige colores, un tema claro u oscuro y el orden de cada sección. Tu página se ve exactamente como tú quieras.' },
+      en: { sub: 'Colors · Themes', title: ['Your', 'style'], card: 'Your style', tag: 'Themes', desc: 'Pick colors, a light or dark theme and the order of every section. Your page looks exactly the way you want.' } }
+  ];
+  var cur = 0, busy = false, timer = null;
+  var hero = document.getElementById('hero'), mock = document.getElementById('mock');
+
+  function miniHTML(kind) {
+    if (kind === 'list') return '<i class="p" style="width:60%"></i><i></i><i style="width:85%"></i><i></i><i style="width:70%"></i><i style="width:90%"></i>';
+    if (kind === 'weather') return '<div style="display:flex;align-items:center;gap:8px"><i style="width:22px;height:22px;border-radius:50%" class="p"></i><i style="width:40%;height:10px"></i></div><div style="display:flex;align-items:end;gap:3px;height:40px"><i style="flex:1;height:40%"></i><i style="flex:1;height:60%"></i><i class="p" style="flex:1;height:85%"></i><i style="flex:1;height:70%"></i><i style="flex:1;height:50%"></i></div>';
+    if (kind === 'spark') return '<svg viewBox="0 0 100 50" preserveAspectRatio="none"><polyline points="0,40 14,34 26,38 40,22 54,28 66,14 80,18 100,6" fill="none" stroke="var(--g-primary)" stroke-width="3" stroke-linejoin="round"/></svg>';
+    if (kind === 'grid') return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><i style="height:22px" class="p"></i><i style="height:22px"></i><i style="height:22px"></i><i style="height:22px" class="p"></i></div><i style="width:70%"></i>';
+    return '<div style="display:flex;gap:5px"><i style="height:20px;width:20px;border-radius:50%;background:#f3b23c"></i><i style="height:20px;width:20px;border-radius:50%;background:#5fd4c4"></i><i style="height:20px;width:20px;border-radius:50%;background:#e59adf"></i><i style="height:20px;width:20px;border-radius:50%;background:#b9d46a"></i></div><i></i><i style="width:60%"></i>';
+  }
+  function renderCards() {
+    var box = document.getElementById('cards'); box.innerHTML = '';
+    for (var k = 1; k < slides.length; k++) {
+      var idx = (cur + k) % slides.length, s = slides[idx], L = s[lang];
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'card th'; b.id = 'card-' + idx; b.style.setProperty('--i', k - 1);
+      if (s.t) b.setAttribute('data-gtheme', s.t);
+      b.setAttribute('aria-label', L.card);
+      b.innerHTML = '<div class="mini">' + miniHTML(s.mini) + '</div><div class="meta"><span class="dash"></span><small>' + L.tag + '</small><b>' + L.card + '</b></div>';
+      (function (i) { b.addEventListener('click', function () { go(i); }); })(idx);
+      box.appendChild(b);
+    }
+  }
+  function paint(animate) {
+    var s = slides[cur], L = s[lang];
+    if (s.t) { hero.setAttribute('data-gtheme', s.t); mock.setAttribute('data-gtheme', s.t); } else { hero.removeAttribute('data-gtheme'); mock.removeAttribute('data-gtheme'); }
+    if (s.focus) mock.setAttribute('data-focus', s.focus); else mock.removeAttribute('data-focus');
+    var title = document.getElementById('s-title');
+    title.innerHTML = '<span></span><span></span>';
+    title.children[0].textContent = L.title[0]; title.children[1].textContent = L.title[1];
+    document.getElementById('s-sub').textContent = L.sub;
+    var d = document.getElementById('s-desc'); d.textContent = L.desc;
+    if (animate && !reduce) { title.classList.remove('swap'); d.classList.remove('fadeup'); void title.offsetWidth; title.classList.add('swap'); d.classList.add('fadeup'); }
+    document.getElementById('counter').innerHTML = String(cur + 1).padStart(2, '0') + '<small>/0' + slides.length + '</small>';
+    document.getElementById('track').style.width = ((cur + 1) / slides.length * 100) + '%';
+    renderCards();
+  }
+  function go(i) {
+    if (busy || i === cur) return;
+    var card = document.getElementById('card-' + i);
+    if (reduce || !card || !card.animate) { cur = i; paint(false); return restart(); }
+    busy = true;
+    var r = card.getBoundingClientRect(), h = hero.getBoundingClientRect();
+    var op = document.createElement('div'); op.className = 'opener th';
+    if (slides[i].t) op.setAttribute('data-gtheme', slides[i].t);
+    Object.assign(op.style, { top: r.top + 'px', left: r.left + 'px', width: r.width + 'px', height: r.height + 'px' });
+    document.body.appendChild(op); card.style.visibility = 'hidden';
+    var top = Math.max(h.top, 0);
+    var grow = op.animate([
+      { top: r.top + 'px', left: r.left + 'px', width: r.width + 'px', height: r.height + 'px', borderRadius: '14px' },
+      { top: top + 'px', left: h.left + 'px', width: h.width + 'px', height: Math.min(h.bottom, innerHeight) - top + 'px', borderRadius: '0px' }
+    ], { duration: 720, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' });
+    grow.onfinish = function () {
+      cur = i; paint(true);
+      var fade = op.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
+      fade.onfinish = function () { op.remove(); busy = false; };
+    };
+    restart();
+  }
+  function restart() {
+    if (reduce) return;
+    clearInterval(timer);
+    timer = setInterval(function () { if (!document.hidden && !hero.matches(':hover')) go((cur + 1) % slides.length); }, 7000);
+  }
+  document.getElementById('next').addEventListener('click', function () { go((cur + 1) % slides.length); });
+  document.getElementById('prev').addEventListener('click', function () { if (busy) return; cur = (cur - 1 + slides.length) % slides.length; paint(true); restart(); });
+
+  /* i18n */
+  function applyLang(l) {
+    lang = l; document.documentElement.lang = l;
+    document.querySelectorAll('[data-' + l + ']').forEach(function (el) { el.textContent = el.getAttribute('data-' + l); });
+    document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === l)); });
+    paint(false); renderDate(); renderFeed(); labelMarkets();
+    try { localStorage.setItem('glance-lang', l); } catch (e) {}
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { applyLang(b.dataset.lang); }); });
+
+  /* clock + calendar */
+  var months = { es: ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'], en: ['January','February','March','April','May','June','July','August','September','October','November','December'] };
+  var days = { es: ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'], en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] };
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function tick() { var d = new Date(); document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function renderDate() {
+    var d = new Date();
+    document.getElementById('clock-date').textContent = lang === 'es' ? days.es[d.getDay()] + ', ' + d.getDate() + ' de ' + months.es[d.getMonth()] : days.en[d.getDay()] + ', ' + months.en[d.getMonth()] + ' ' + d.getDate();
+    var cal = document.getElementById('cal'); cal.innerHTML = '';
+    var off = (new Date(d.getFullYear(), d.getMonth(), 1).getDay() + 6) % 7, total = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    for (var i = 0; i < off; i++) cal.appendChild(document.createElement('span'));
+    for (var n = 1; n <= total; n++) { var s = document.createElement('span'); s.textContent = n; if (n === d.getDate()) s.className = 't'; cal.appendChild(s); }
+  }
+
+  /* sample news */
+  var news = [
+    { es: 'Cinco playas para escaparte en el puente de diciembre', en: 'Five beaches for a December long weekend', src: 'El Viajero', h: 1 },
+    { es: 'Así quedó la tabla tras la última jornada del torneo', en: 'The league table after the latest matchday', src: 'Deportes Hoy', h: 2 },
+    { es: 'Las series y películas que se estrenan este mes', en: 'The shows and movies premiering this month', src: 'Pantalla', h: 3 },
+    { es: 'Siete ideas para ahorrar en las compras de fin de año', en: 'Seven ways to save on year-end shopping', src: 'Bolsillo', h: 4 },
+    { es: 'Receta: chilaquiles verdes en 20 minutos', en: 'Recipe: green chilaquiles in 20 minutes', src: 'Cocina Fácil', h: 5 },
+    { es: 'Frente frío traerá noches frescas este fin de semana', en: 'Cold front brings cool nights this weekend', src: 'El Clima', h: 6 }
+  ];
+  var head = 0;
+  function li(s) { var el = document.createElement('li'); el.innerHTML = '<span></span><small><b></b> · </small>'; el.firstChild.textContent = s[lang]; el.lastChild.firstChild.textContent = s.src; el.lastChild.appendChild(document.createTextNode((lang === 'es' ? 'hace ' + s.h + ' h' : s.h + 'h ago'))); return el; }
+  function renderFeed() { var ul = document.getElementById('news'); ul.innerHTML = ''; for (var i = 0; i < 5; i++) { var e = li(news[(head + i) % news.length]); e.style.animation = 'none'; ul.appendChild(e); } }
+  function pushNews() { head = (head - 1 + news.length) % news.length; var ul = document.getElementById('news'); ul.insertBefore(li(news[head]), ul.firstChild); while (ul.children.length > 5) ul.removeChild(ul.lastChild); }
+
+  /* sample money */
+  var mk = [{ s: 'USD → MXN', es: 'Dólar', en: 'US dollar', p: 18.42 }, { s: 'EUR → MXN', es: 'Euro', en: 'Euro', p: 21.36 }, { s: 'BTC', es: 'Bitcoin', en: 'Bitcoin', p: 91840 }];
+  var mbox = document.getElementById('markets');
+  mk.forEach(function (m) {
+    m.pts = []; var v = m.p; for (var i = 0; i < 24; i++) { v *= 1 + (Math.random() - .48) * .01; m.pts.push(v); } m.open = m.pts[0];
+    m.el = document.createElement('div'); m.el.className = 'mkt';
+    m.el.innerHTML = '<div><b></b><br><small></small></div><div><div class="px"></div><div class="chg"></div></div><svg viewBox="0 0 100 26" preserveAspectRatio="none"><polyline></polyline></svg>';
+    m.el.querySelector('b').textContent = m.s; mbox.appendChild(m.el);
+  });
+  function labelMarkets() { mk.forEach(function (m) { m.el.querySelector('small').textContent = m[lang]; }); }
+  function drawMarkets(stepIt) {
+    mk.forEach(function (m) {
+      if (stepIt) { m.pts.push(m.pts[m.pts.length - 1] * (1 + (Math.random() - .48) * .008)); m.pts.shift(); }
+      var mn = Math.min.apply(null, m.pts), mx = Math.max.apply(null, m.pts), sp = mx - mn || 1, c = m.pts[m.pts.length - 1], ch = (c / m.open - 1) * 100, up = ch >= 0;
+      var pl = m.el.querySelector('polyline');
+      pl.setAttribute('points', m.pts.map(function (v, i) { return (i / 23 * 100).toFixed(1) + ',' + (24 - (v - mn) / sp * 22).toFixed(1); }).join(' '));
+      pl.style.stroke = up ? 'var(--g-pos)' : 'var(--g-neg)';
+      m.el.querySelector('.px').textContent = c >= 1000 ? '$' + Math.round(c).toLocaleString('en-US') : '$' + c.toFixed(2);
+      var e = m.el.querySelector('.chg'); e.textContent = (up ? '+' : '') + ch.toFixed(2) + '%'; e.className = 'chg ' + (up ? 'up' : 'down');
+    });
+  }
+
+  applyLang(lang === 'en' ? 'en' : 'es');
+  tick(); drawMarkets(false);
+  setInterval(tick, 10000);
+  if (!reduce) { setInterval(function () { drawMarkets(true); }, 1800); setInterval(pushNews, 4500); }
+  restart();
+})();
+</script>
+</body>
+</html>
